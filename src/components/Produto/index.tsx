@@ -1,4 +1,4 @@
-import { Produto as ProdutoType } from '../../App'
+import type { Produto as ProdutoType } from '../../store/api'
 import * as S from './styles'
 
 type Props = {
@@ -9,9 +9,10 @@ type Props = {
 }
 
 export const paraReal = (valor: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-    valor
-  )
+  new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(valor)
 
 const ProdutoComponent = ({
   produto,

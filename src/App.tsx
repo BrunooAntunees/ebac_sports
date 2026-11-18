@@ -1,42 +1,53 @@
-import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import Header from './components/Header'
 import Produtos from './containers/Produtos'
-
 import { GlobalStyle } from './styles'
+import { useGetProdutosQuery } from './store/api'
+import type { Produto as ProdutoType } from './store/api'
+import { adicionar, favoritar } from './store/cartSlice'
+import type { RootState, AppDispatch } from './store'
 
-export type Produto = {
-  id: number
-  nome: string
-  preco: number
-  imagem: string
-}
+export type { Produto } from './store/api'
 
 function App() {
-  const [produtos, setProdutos] = useState<Produto[]>([])
-  const [carrinho, setCarrinho] = useState<Produto[]>([])
-  const [favoritos, setFavoritos] = useState<Produto[]>([])
+  const dispatch = useDispatch<AppDispatch>()
 
-  useEffect(() => {
-    fetch('https://api-ebac.vercel.app/api/ebac_sports')
-      .then((res) => res.json())
-      .then((res) => setProdutos(res))
-  }, [])
+  const { data: produtos = [], isLoading, error } = useGetProdutosQuery()
 
-  function adicionarAoCarrinho(produto: Produto) {
-    if (carrinho.find((p) => p.id === produto.id)) {
+  const carrinho = useSelector((state: RootState) => state.cart.itens)
+  const favoritos = useSelector((state: RootState) => state.cart.favoritos)
+
+  const adicionarAoCarrinho = (produto: ProdutoType) => {
+    const jaExiste = carrinho.some((item) => item.id === produto.id)
+
+    if (jaExiste) {
       alert('Item já adicionado')
-    } else {
-      setCarrinho([...carrinho, produto])
+      return
     }
+
+    dispatch(adicionar(produto))
   }
 
-  function favoritar(produto: Produto) {
-    if (favoritos.find((p) => p.id === produto.id)) {
-      const favoritosSemProduto = favoritos.filter((p) => p.id !== produto.id)
-      setFavoritos(favoritosSemProduto)
-    } else {
-      setFavoritos([...favoritos, produto])
-    }
+  const favoritarProduto = (produto: ProdutoType) => {
+    dispatch(favoritar(produto))
+  }
+
+  if (isLoading) {
+    return (
+      <>
+        <GlobalStyle />
+        <p>Carregando produtos...</p>
+      </>
+    )
+  }
+
+  if (error) {
+    return (
+      <>
+        <GlobalStyle />
+        <p>Erro ao carregar os produtos.</p>
+      </>
+    )
   }
 
   return (
@@ -47,7 +58,7 @@ function App() {
         <Produtos
           produtos={produtos}
           favoritos={favoritos}
-          favoritar={favoritar}
+          favoritar={favoritarProduto}
           adicionarAoCarrinho={adicionarAoCarrinho}
         />
       </div>
